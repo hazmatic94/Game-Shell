@@ -1,0 +1,1722 @@
+/* Shell, navigation, wallet, action, and betting layout styles. */
+
+.joker-game-shell {
+  display: grid;
+  overflow: hidden;
+  width: 100%;
+  min-height: 100vh;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: var(--joker-black-800);
+}
+
+.joker-mobile-game-shell {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-height: 100vh;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  background: var(--joker-black-800);
+}
+
+.joker-mobile-game-content {
+  display: grid;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--joker-black-800);
+  scrollbar-width: none;
+}
+
+.joker-mobile-game-content::-webkit-scrollbar {
+  display: none;
+}
+
+.joker-mobile-game-content .joker-game-header-rail {
+  padding: 0 20px;
+}
+
+.joker-mobile-game-stage {
+  position: relative;
+  height: 524px;
+  min-height: 524px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--joker-black-300);
+  background:
+    radial-gradient(circle at 50% 34%, rgb(255 222 168 / 0.06), transparent 32%),
+    linear-gradient(180deg, var(--joker-black-900), var(--joker-black-800));
+}
+
+.joker-mobile-scroll-cue {
+  position: absolute;
+  z-index: 5;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  height: 60px;
+  place-items: end center;
+  background: linear-gradient(to bottom, transparent, rgb(19 19 19 / 0.92) 84%);
+  padding-bottom: var(--spacing-8);
+  pointer-events: none;
+  transition:
+    opacity var(--motion-base) var(--ease-standard),
+    visibility var(--motion-base) var(--ease-standard);
+}
+
+.joker-mobile-scroll-cue.is-hidden {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.joker-mobile-scroll-cue.is-hidden > span {
+  animation: none;
+}
+
+.joker-mobile-scroll-cue > span {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  color: var(--joker-gold-400);
+  animation: scroll-cue-drop 1.6s ease-in-out infinite;
+}
+
+.joker-mobile-scroll-cue svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.25;
+}
+
+.joker-mobile-game-betting .joker-betting-panel {
+  width: 100%;
+  min-width: 0;
+  border-right: 0;
+}
+
+.joker-mobile-game-betting .joker-betting-spacer {
+  min-height: var(--spacing-32);
+}
+
+.joker-game-shell-top-rail {
+  width: 100%;
+}
+
+.joker-game-shell .joker-top-rail-demo {
+  width: 100%;
+  max-width: none;
+}
+
+.joker-game-shell-side {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+}
+
+.joker-game-shell-side .joker-product-rail {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  border: 0;
+  border-right: 1px solid var(--joker-black-300);
+}
+
+.joker-game-shell-side .joker-product-rail-scroll {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.joker-game-shell-side .joker-product-rail-footer {
+  position: relative;
+  z-index: 3;
+  align-self: end;
+}
+
+.joker-game-shell-top {
+  display: grid;
+  height: 74px;
+  box-sizing: border-box;
+  grid-template-columns: 179px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: var(--spacing-16);
+  border-bottom: 1px solid var(--joker-black-300);
+  background: var(--joker-black-800);
+  padding: 0 var(--spacing-32);
+}
+
+.joker-game-shell-top .joker-logo-component {
+  width: 179px;
+}
+
+.joker-game-shell-top .joker-logo-component img {
+  width: 128px;
+}
+
+.joker-game-shell-wallet {
+  display: flex;
+  justify-content: center;
+}
+
+.joker-game-shell-wallet .joker-wallet-control {
+  width: 250px;
+}
+
+.joker-game-shell-body {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: 240px minmax(0, 1fr) minmax(320px, 402px);
+}
+
+.joker-game-shell-rail {
+  display: grid;
+  align-content: start;
+  gap: var(--spacing-8);
+  border-right: 1px solid var(--joker-black-300);
+  background: var(--joker-black-900);
+  padding: var(--spacing-24);
+}
+
+.joker-game-shell-rail .joker-product-rail-item {
+  width: 100%;
+  height: 40px;
+}
+
+.joker-game-shell-stage {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+  background:
+    radial-gradient(circle at 50% 35%, rgb(255 222 168 / 0.08), transparent 28%),
+    linear-gradient(180deg, var(--joker-black-900), var(--joker-black-800));
+}
+
+.joker-game-shell-play-area {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-template-columns: minmax(320px, 402px) minmax(0, 1fr);
+}
+
+.joker-game-shell-betting {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.joker-game-shell-betting::-webkit-scrollbar {
+  display: none;
+}
+
+.joker-game-shell-betting .joker-betting-panel {
+  width: 100%;
+  min-height: 100%;
+}
+
+.joker-game-shell-empty-stage {
+  min-width: 0;
+  min-height: 0;
+  background:
+    radial-gradient(circle at 50% 36%, rgb(255 222 168 / 0.05), transparent 30%),
+    linear-gradient(180deg, var(--joker-black-900), var(--joker-black-800));
+}
+
+.joker-game-shell-sample-content {
+  display: grid;
+  min-height: 100%;
+  place-items: center;
+  padding: var(--spacing-32);
+  color: var(--joker-gold-100);
+  font-family: var(--font-display);
+  font-size: clamp(32px, 7vw, 72px);
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 0.92;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.joker-game-header-rail {
+  display: flex;
+  width: 100%;
+  height: 52px;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--joker-black-300);
+  background: var(--joker-black-600);
+  color: var(--joker-white-50);
+  font-family: var(--font);
+  font-size: var(--body-14);
+  font-weight: 400;
+  line-height: 1;
+  padding: 0 var(--spacing-24);
+}
+
+.joker-game-header-group,
+.joker-game-header-title,
+.joker-game-header-fair-play {
+  display: inline-flex;
+  align-items: center;
+}
+
+.joker-game-header-group {
+  min-width: 0;
+  gap: var(--spacing-16);
+}
+
+.joker-game-header-title,
+.joker-game-header-fair-play {
+  gap: var(--spacing-8);
+}
+
+.joker-game-header-title {
+  color: var(--joker-white-50);
+}
+
+.joker-game-header-info {
+  color: var(--joker-black-100);
+}
+
+.joker-game-header-info svg,
+.joker-game-header-shield svg,
+.joker-game-header-game-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.joker-game-header-info svg,
+.joker-game-header-shield svg {
+  display: block;
+}
+
+.joker-game-header-info svg,
+.joker-game-header-info svg path,
+.joker-game-header-shield svg,
+.joker-game-header-shield svg path {
+  fill: currentColor;
+  stroke: none;
+}
+
+.joker-game-header-shield {
+  color: var(--joker-white-50);
+}
+
+.joker-game-header-game-icon {
+  color: var(--joker-gold-100);
+}
+
+.joker-game-canvas {
+  position: relative;
+  display: grid;
+  min-height: 788px;
+  place-items: center;
+  overflow: hidden;
+}
+
+.joker-game-orbit {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border: 1px solid color-mix(in srgb, var(--joker-gold-400) 14%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 80px rgb(255 222 168 / 0.08);
+}
+
+.joker-game-round {
+  position: relative;
+  display: grid;
+  width: 132px;
+  height: 132px;
+  place-items: center;
+  border: 1px solid var(--joker-black-300);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--joker-black-700) 80%, transparent);
+  color: var(--joker-gold-400);
+  font-family: var(--font-display);
+  font-size: var(--display-d5);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.joker-game-control-row {
+  display: flex;
+  gap: var(--spacing-16);
+  border-top: 1px solid var(--joker-black-300);
+  padding: var(--spacing-16);
+}
+
+.joker-game-control-row .joker-cta-preview {
+  width: 100%;
+}
+
+.joker-betting-panel {
+  display: grid;
+  width: min(100%, 402px);
+  min-width: min(100%, 320px);
+  box-sizing: border-box;
+  gap: var(--spacing-32);
+  border-right: 1px solid var(--joker-black-300);
+  background: var(--joker-black-700);
+  color: var(--joker-white-50);
+  padding: var(--spacing-24);
+}
+
+.joker-bet-mode-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-16);
+}
+
+.joker-bet-mode {
+  width: 100%;
+  gap: var(--spacing-8);
+  padding: 0 var(--spacing-16);
+}
+
+.joker-bet-mode > .system-icon,
+.joker-bet-mode > span {
+  transform: translateX(-6px);
+}
+
+.joker-bet-mode svg {
+  width: 16px;
+  height: 16px;
+}
+
+.joker-cta-preview.secondary.joker-bet-mode.is-selected {
+  border-color: var(--joker-gold-300);
+  background-color: color-mix(in srgb, var(--joker-gold-900) 38%, var(--button-secondary-bg));
+  color: var(--joker-white-50);
+}
+
+.joker-cta-preview.secondary.joker-bet-mode:disabled {
+  cursor: not-allowed;
+  opacity: 0.44;
+}
+
+.joker-betting-divider {
+  display: block;
+  height: 1px;
+  border-top: 1px dashed var(--joker-black-300);
+}
+
+.joker-betting-fields {
+  display: grid;
+  gap: var(--spacing-16);
+}
+
+.joker-bet-field {
+  display: grid;
+  width: 100%;
+  gap: var(--spacing-8);
+}
+
+.joker-bet-field-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-16);
+  color: var(--color-text-secondary);
+  font-family: var(--font);
+  font-size: var(--body-14);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.joker-bet-field-row .joker-input-label {
+  font-size: var(--body-14);
+}
+
+.joker-betting-panel .joker-bet-field > .joker-input-label {
+  color: var(--color-text-secondary);
+  font-family: var(--font);
+  font-size: var(--body-14);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.joker-bet-field-row span {
+  color: var(--joker-black-50);
+}
+
+.joker-betting-panel .joker-input-control {
+  width: 100%;
+  height: 48px;
+  box-sizing: border-box;
+  border-color: var(--joker-black-300);
+  background: var(--joker-black-800);
+}
+
+.joker-betting-panel .joker-input-control:focus-within,
+.joker-betting-panel .joker-input-control:hover {
+  border-color: var(--joker-gold-300);
+  background: color-mix(in srgb, var(--joker-gold-900) 24%, var(--joker-black-800));
+}
+
+.joker-betting-panel .joker-input-icon,
+.joker-betting-panel .joker-input-icon img {
+  width: 16px;
+  height: 16px;
+}
+
+.joker-betting-panel .joker-input-control input {
+  color: var(--joker-white-50);
+  font-family: var(--font);
+  font-size: var(--body-14);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.joker-betting-panel .joker-input-control.is-readonly {
+  pointer-events: none;
+}
+
+.joker-bet-output-value {
+  color: var(--joker-white-50);
+  font-family: var(--font);
+  font-size: var(--body-14);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.joker-betting-panel .joker-input-field {
+  width: 100%;
+}
+
+.joker-betting-panel .joker-cta-preview {
+  width: 100%;
+}
+
+.joker-bet-submit {
+  min-width: 0;
+}
+
+.joker-betting-spacer {
+  min-height: clamp(96px, 18vw, 260px);
+}
+
+.joker-game-stage-component {
+  position: relative;
+  display: grid;
+  width: min(100%, 520px);
+  height: 300px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--joker-black-300);
+  border-radius: var(--radius-sm);
+  background:
+    radial-gradient(circle at 50% 42%, rgb(255 222 168 / 0.08), transparent 32%),
+    linear-gradient(180deg, var(--joker-black-900), var(--joker-black-800));
+}
+
+.joker-game-stage-orbit {
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  border: 1px solid color-mix(in srgb, var(--joker-gold-400) 14%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 70px rgb(255 222 168 / 0.08);
+}
+
+.joker-game-controls-component {
+  display: grid;
+  width: min(100%, 420px);
+  gap: var(--spacing-16);
+}
+
+.joker-game-controls-component .joker-cta-preview {
+  width: 100%;
+}
+
+.joker-product-rail {
+  --product-rail-width: 240px;
+  --product-rail-section-inline: var(--spacing-24);
+  --product-rail-section-block: var(--spacing-16);
+  --product-rail-divider: var(--joker-black-300);
+  position: relative;
+  display: grid;
+  width: var(--product-rail-width);
+  height: min(760px, calc(100vh - 156px));
+  min-height: 520px;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--joker-black-300) 80%, transparent);
+  background: var(--joker-black-800);
+  color: var(--joker-black-50);
+}
+
+.joker-product-rail-search,
+.joker-product-rail-section,
+.joker-product-rail-footer {
+  padding: var(--product-rail-section-block) var(--product-rail-section-inline);
+}
+
+.joker-product-rail-search,
+.joker-product-rail-scroll,
+.joker-product-rail-section,
+.joker-product-rail-footer {
+  background: var(--joker-black-800);
+}
+
+.joker-product-rail-search,
+.joker-product-rail-section + .joker-product-rail-section,
+.joker-product-rail-footer {
+  border-top: 1px solid var(--product-rail-divider);
+}
+
+.joker-product-rail-search {
+  border-top: 0;
+  border-bottom: 1px solid var(--product-rail-divider);
+}
+
+.joker-product-rail-search .joker-rail-search-item {
+  width: 100%;
+}
+
+.joker-product-rail-scroll {
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.joker-product-rail-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.joker-product-rail::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 73px;
+  left: 0;
+  z-index: 2;
+  height: 60px;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, var(--joker-black-800));
+}
+
+.joker-product-rail-footer {
+  position: relative;
+  z-index: 3;
+  background: var(--joker-black-800);
+}
+
+.joker-product-rail-item,
+.joker-product-rail-menu-trigger,
+.joker-product-rail-game-option {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  box-sizing: border-box;
+  align-items: center;
+  gap: var(--spacing-8);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--joker-black-50);
+  font-family: var(--font);
+  font-size: var(--body-14);
+  font-weight: 400;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.joker-product-rail-section {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  gap: var(--spacing-8);
+}
+
+.joker-product-rail-section > *,
+.joker-product-rail-game-menu,
+.joker-product-rail-game-list {
+  width: 100%;
+  min-width: 0;
+}
+
+.joker-product-rail-item {
+  padding: 0 var(--spacing-8);
+}
+
+.joker-product-rail-item:hover,
+.joker-product-rail-menu-trigger:hover,
+.joker-product-rail-game-option:hover {
+  border-color: var(--joker-black-300);
+  background: var(--joker-black-700);
+  color: var(--joker-white-50);
+}
+
+.joker-product-rail-item svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  color: currentColor;
+  fill: currentColor;
+  stroke-width: 1.75;
+}
+
+.joker-product-rail-item svg path,
+.joker-product-rail-item svg circle {
+  fill: currentColor;
+}
+
+.joker-product-rail-item--with-ball svg {
+  fill: none;
+}
+
+.joker-product-rail-item--with-ball svg circle {
+  fill: currentColor;
+}
+
+.joker-product-rail-logout {
+  color: var(--joker-white-50);
+}
+
+.joker-product-rail-logout svg {
+  color: var(--joker-red-400);
+  fill: none;
+  stroke: currentColor;
+}
+
+.joker-product-rail-menu-trigger {
+  justify-content: space-between;
+  border-width: 1px;
+  border-color: var(--joker-black-300);
+  color: var(--joker-white-50);
+  padding: 0 var(--spacing-8);
+  cursor: pointer;
+}
+
+.joker-product-rail-menu-label {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--spacing-8);
+}
+
+.joker-product-rail-menu-chevron {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--joker-black-300);
+  border-radius: var(--radius-sm);
+  color: var(--joker-white-50);
+  transition:
+    background-color var(--motion-base) var(--ease-standard),
+    border-color var(--motion-base) var(--ease-standard),
+    transform var(--motion-base) var(--ease-standard);
+}
+
+.joker-product-rail-menu-chevron svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 3;
+}
+
+.joker-product-rail-game-menu {
+  display: grid;
+  gap: var(--spacing-8);
+}
+
+.joker-product-rail-game-menu:not(.is-open) {
+  gap: 0;
+}
+
+.joker-product-rail-game-menu.is-open .joker-product-rail-menu-trigger {
+  border-color: color-mix(in srgb, var(--joker-gold-400) 20%, var(--joker-black-300));
+  background: color-mix(in srgb, var(--joker-gold-1000) 58%, var(--joker-black-700));
+  color: var(--joker-gold-50);
+}
+
+.joker-product-rail-game-menu.is-open .joker-product-rail-menu-chevron {
+  border-color: var(--joker-black-200);
+  background: var(--joker-black-600);
+  transform: rotate(180deg);
+}
+
+.joker-product-rail-game-list {
+  display: grid;
+  max-height: 0;
+  overflow: hidden;
+  gap: var(--spacing-8);
+  border: 0 solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--joker-black-700);
+  padding: 0 var(--spacing-8);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px) scale(0.985);
+  transform-origin: top center;
+  transition:
+    max-height var(--motion-medium) var(--ease-out),
+    opacity var(--motion-medium) var(--ease-out),
+    padding var(--motion-medium) var(--ease-out),
+    transform var(--motion-medium) var(--ease-out);
+}
+
+.joker-product-rail-game-menu.is-open .joker-product-rail-game-list {
+  max-height: 280px;
+  border-width: 1px;
+  border-color: var(--joker-black-300);
+  padding: var(--spacing-8);
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.joker-product-rail-game-option {
+  height: 40px;
+  padding: 0 var(--spacing-8);
+  cursor: pointer;
+}
+
+.joker-product-rail-item.is-selected,
+.joker-product-rail-game-option.is-selected {
+  border-width: 1px;
+  border-color: color-mix(in srgb, var(--joker-gold-400) 20%, var(--joker-black-300));
+  background: color-mix(in srgb, var(--joker-gold-1000) 58%, var(--joker-black-700));
+  color: var(--joker-gold-50);
+}
+
+.joker-product-rail-game-icon {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: currentColor;
+}
+
+.joker-product-rail-game-icon svg,
+.joker-product-rail-game-icon img {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.joker-product-rail-game-icon svg,
+.joker-product-rail-game-icon svg path,
+.joker-product-rail-game-icon svg circle {
+  fill: currentColor;
+}
+
+.nav-custom-icon {
+  display: block;
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.joker-product-rail-item > .nav-custom-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+@media (max-height: 820px) {
+  .joker-product-rail {
+    height: min(640px, calc(100vh - 132px));
+  }
+}
+
+@media (max-width: 1000px) {
+  .joker-product-rail {
+    --product-rail-width: 72px;
+    --product-rail-section-inline: var(--spacing-16);
+    overflow: visible;
+  }
+
+  .joker-product-rail-scroll {
+    overflow: visible;
+  }
+
+  .joker-product-rail-search,
+  .joker-product-rail-section,
+  .joker-product-rail-footer {
+    display: grid;
+    justify-items: center;
+  }
+
+  .joker-product-rail-search .joker-rail-search-item,
+  .joker-product-rail-item,
+  .joker-product-rail-menu-trigger,
+  .joker-product-rail-game-option {
+    position: relative;
+    width: 40px;
+    min-width: 40px;
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+  }
+
+  .joker-product-rail-search .joker-rail-search-item {
+    cursor: pointer;
+  }
+
+  .joker-product-rail-search .joker-rail-search-item input,
+  .joker-product-rail-item > span,
+  .joker-product-rail-menu-label > span:last-child,
+  .joker-product-rail-game-option > span:last-child,
+  .joker-product-rail-menu-chevron {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .joker-product-rail-menu-label {
+    justify-content: center;
+    gap: 0;
+  }
+
+  .joker-product-rail-game-menu,
+  .joker-product-rail-game-list {
+    justify-items: center;
+  }
+
+  .joker-product-rail-game-list {
+    width: 40px;
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  .joker-product-rail-game-menu.is-open .joker-product-rail-game-list {
+    padding: var(--spacing-8) 0;
+  }
+
+  .joker-product-rail-search .joker-rail-search-item::after,
+  .joker-product-rail-item::after,
+  .joker-product-rail-menu-trigger::after,
+  .joker-product-rail-game-option::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: 50%;
+    left: calc(100% + var(--spacing-8));
+    z-index: 20;
+    display: block;
+    width: max-content;
+    max-width: 180px;
+    padding: 7px 9px;
+    border: 1px solid var(--joker-black-300);
+    border-radius: var(--radius-sm);
+    background: var(--joker-black-800);
+    box-shadow: 0 12px 30px rgb(0 0 0 / 0.32);
+    color: var(--joker-white-50);
+    font-family: var(--font);
+    font-size: var(--body-14);
+    font-weight: 400;
+    line-height: 1;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(4px, -50%);
+    transition:
+      opacity var(--motion-fast) var(--ease-out),
+      transform var(--motion-fast) var(--ease-out);
+  }
+
+  .joker-product-rail-search .joker-rail-search-item:hover::after,
+  .joker-product-rail-item:hover::after,
+  .joker-product-rail-menu-trigger:hover::after,
+  .joker-product-rail-game-option:hover::after {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+}
+
+.joker-wallet-control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+}
+
+.joker-wallet-balance,
+.joker-wallet-action {
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--joker-black-800);
+}
+
+.joker-wallet-balance {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+  padding: 0 12px;
+  border: 1px solid var(--joker-black-300);
+  color: var(--joker-white-50);
+  font-size: var(--body-14);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.joker-wallet-coin {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.joker-wallet-action {
+  display: grid;
+  width: 40px;
+  place-items: center;
+  border: 1px solid var(--joker-gold-400);
+  background: var(--joker-gold-1000);
+  color: var(--joker-gold-400);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-base) var(--ease-standard),
+    border-color var(--motion-base) var(--ease-standard),
+    color var(--motion-base) var(--ease-standard);
+}
+
+.joker-wallet-action svg {
+  width: 18px;
+  height: 18px;
+  color: currentColor;
+  fill: currentColor;
+  stroke-width: 1.75;
+}
+
+.joker-wallet-action:hover {
+  border-color: var(--joker-gold-300);
+  background: color-mix(in srgb, var(--joker-gold-1000) 82%, var(--joker-gold-400));
+  color: var(--joker-gold-200);
+}
+
+.joker-action-group-set {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-8);
+}
+
+.joker-action-item,
+.joker-avatar-item,
+.joker-action-cluster {
+  border: 1px solid var(--joker-black-300);
+  border-radius: var(--radius-sm);
+  background: var(--joker-black-700);
+}
+
+.joker-action-item,
+.joker-avatar-item {
+  position: relative;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  padding: 0;
+  color: var(--joker-white-50);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-base) var(--ease-standard),
+    border-color var(--motion-base) var(--ease-standard),
+    color var(--motion-base) var(--ease-standard),
+    transform var(--motion-base) var(--ease-standard);
+}
+
+.joker-action-item:hover,
+.joker-avatar-item:hover {
+  border-color: var(--joker-black-200);
+  background: var(--joker-black-600);
+  color: var(--joker-white-50);
+}
+
+.joker-action-item svg {
+  width: 16px;
+  height: 16px;
+  color: currentColor;
+  fill: currentColor;
+  stroke-width: 1.75;
+}
+
+.joker-action-item svg path,
+.joker-action-item svg circle,
+.joker-action-item svg rect {
+  fill: currentColor;
+}
+
+.joker-action-cluster {
+  display: inline-flex;
+  height: 40px;
+  align-items: center;
+  overflow: hidden;
+}
+
+.joker-action-cluster .joker-action-item {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.joker-action-cluster .joker-action-item:hover {
+  background: var(--joker-black-600);
+  color: var(--joker-white-50);
+}
+
+.joker-action-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--joker-black-300);
+}
+
+.joker-action-badge,
+.joker-avatar-status {
+  position: absolute;
+  border-radius: 999px;
+}
+
+.joker-action-badge {
+  top: 7px;
+  right: 7px;
+  width: 8px;
+  height: 8px;
+  background: var(--joker-red-400);
+}
+
+.joker-avatar-item {
+  overflow: visible;
+  padding: 2px;
+}
+
+.joker-avatar-item img {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  object-fit: cover;
+  object-position: center top;
+  transition: transform var(--motion-base) var(--ease-standard);
+}
+
+.joker-avatar-item:hover img {
+  transform: scale(1.04);
+}
+
+.joker-avatar-status {
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  background: var(--joker-green-400);
+  box-shadow:
+    0 0 0 2px var(--joker-black-700),
+    0 0 10px color-mix(in srgb, var(--joker-green-400) 72%, transparent);
+  animation: joker-online-pulse 1.8s var(--ease-standard) infinite;
+}
+
+@keyframes joker-online-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px var(--joker-black-700),
+      0 0 8px color-mix(in srgb, var(--joker-green-400) 58%, transparent);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 2px var(--joker-black-700),
+      0 0 0 5px color-mix(in srgb, var(--joker-green-400) 16%, transparent),
+      0 0 14px color-mix(in srgb, var(--joker-green-400) 82%, transparent);
+  }
+}
+
+.joker-logo-component {
+  display: inline-flex;
+  width: 179px;
+  height: 40px;
+  align-items: center;
+  justify-content: flex-start;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  text-decoration: none;
+  transition:
+    opacity var(--motion-base) var(--ease-standard),
+    transform var(--motion-base) var(--ease-standard);
+}
+
+.joker-logo-component:hover {
+  opacity: 0.8;
+}
+
+.joker-logo-component img {
+  display: block;
+  width: 128px;
+  height: auto;
+}
+
+.joker-rail-nav-state-demo {
+  display: grid;
+  width: 212px;
+  gap: var(--spacing-8);
+}
+
+.joker-rail-nav-item {
+  display: inline-flex;
+  width: 212px;
+  height: 40px;
+  box-sizing: border-box;
+  align-items: center;
+  gap: var(--spacing-12);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--joker-black-50);
+  padding: 0 var(--spacing-16);
+  font-size: var(--body-14);
+  font-weight: 400;
+  line-height: 1;
+  text-decoration: none;
+  transition:
+    background-color var(--motion-base) var(--ease-standard),
+    border-color var(--motion-base) var(--ease-standard),
+    color var(--motion-base) var(--ease-standard);
+}
+
+.joker-rail-nav-item:hover,
+.joker-rail-nav-item.is-hover {
+  border-color: var(--joker-black-300);
+  background: var(--joker-black-700);
+  color: var(--joker-white-50);
+}
+
+.joker-rail-nav-item[aria-current="page"],
+.joker-rail-nav-item.is-selected {
+  border-color: color-mix(in srgb, var(--joker-gold-400) 20%, var(--joker-black-300));
+  background: color-mix(in srgb, var(--joker-gold-1000) 58%, var(--joker-black-700));
+  color: var(--joker-gold-50);
+}
+
+.joker-rail-nav-item svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: currentColor;
+  fill: currentColor;
+  stroke-width: 1.75;
+}
+
+.joker-rail-nav-item svg path {
+  fill: currentColor;
+}
+
+.joker-rail-search-item {
+  display: inline-flex;
+  width: 212px;
+  height: 40px;
+  box-sizing: border-box;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--joker-black-300);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--joker-black-50);
+  padding: 0 var(--spacing-16);
+  font-size: var(--body-14);
+  font-weight: 400;
+  line-height: 1;
+  cursor: text;
+  transition:
+    background-color var(--motion-base) var(--ease-standard),
+    border-color var(--motion-base) var(--ease-standard),
+    color var(--motion-base) var(--ease-standard);
+}
+
+.joker-rail-search-item:hover {
+  border-color: var(--joker-black-200);
+  background: var(--joker-black-700);
+  color: var(--joker-white-50);
+}
+
+.joker-rail-search-item:focus-within {
+  border-color: var(--joker-gold-300);
+  background: color-mix(in srgb, var(--joker-gold-900) 34%, var(--joker-black-800));
+  color: var(--joker-white-50);
+  outline: none;
+  box-shadow:
+    inset 0 1px 0 rgb(255 244 224 / 0.055),
+    inset 0 -1px 0 rgb(0 0 0 / 0.26),
+    0 0 0 2px rgb(255 228 184 / 0.22);
+}
+
+.joker-rail-search-item:focus-within:hover {
+  border-color: var(--joker-gold-300);
+  background: color-mix(in srgb, var(--joker-gold-900) 42%, var(--joker-black-800));
+}
+
+.joker-rail-search-item input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--joker-white-50);
+  font: inherit;
+  line-height: 1;
+  padding: 0;
+}
+
+.joker-rail-search-item input::placeholder {
+  color: var(--joker-black-50);
+  opacity: 1;
+}
+
+.joker-rail-search-item:focus-within input::placeholder {
+  color: var(--joker-black-50);
+}
+
+.joker-rail-search-item input::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.joker-rail-search-item svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: currentColor;
+  fill: currentColor;
+  stroke-width: 0;
+}
+
+.joker-rail-search-item svg path {
+  fill: currentColor;
+}
+
+.joker-game-menu {
+  display: grid;
+  width: 212px;
+  gap: var(--spacing-8);
+}
+
+.joker-game-menu-trigger {
+  display: inline-flex;
+  width: 100%;
+  height: 40px;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-8);
+  border: 1px solid var(--joker-black-300);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--joker-white-50);
+  padding: 0 var(--spacing-8) 0 var(--spacing-16);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-base) var(--ease-standard),
+    border-color var(--motion-base) var(--ease-standard),
+    color var(--motion-base) var(--ease-standard);
+}
+
+.joker-game-menu-trigger:hover,
+.joker-game-menu.is-open .joker-game-menu-trigger {
+  border-color: var(--joker-black-200);
+  background: var(--joker-black-700);
+}
+
+.joker-game-menu-label {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--spacing-8);
+  color: inherit;
+  font-size: var(--body-14);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.joker-game-menu-label img {
+  display: block;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
+.joker-game-menu-chevron {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--joker-black-300);
+  border-radius: var(--radius-sm);
+  color: var(--joker-white-50);
+  transition:
+    border-color var(--motion-base) var(--ease-standard),
+    background-color var(--motion-base) var(--ease-standard),
+    transform var(--motion-base) var(--ease-standard);
+}
+
+.joker-game-menu-chevron svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 3;
+}
+
+.joker-game-menu.is-open .joker-game-menu-chevron {
+  border-color: var(--joker-black-200);
+  background: var(--joker-black-600);
+  transform: rotate(180deg);
+}
+
+.joker-game-menu-list {
+  display: grid;
+  max-height: 0;
+  overflow: hidden;
+  gap: var(--spacing-8);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--joker-black-800);
+  padding: 0 var(--spacing-8);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px) scale(0.985);
+  transform-origin: top center;
+  transition:
+    max-height var(--motion-medium) var(--ease-out),
+    opacity var(--motion-medium) var(--ease-out),
+    padding var(--motion-medium) var(--ease-out),
+    border-color var(--motion-medium) var(--ease-out),
+    transform var(--motion-medium) var(--ease-out);
+}
+
+.joker-game-menu.is-open .joker-game-menu-list {
+  max-height: 280px;
+  border-color: var(--joker-black-300);
+  padding: var(--spacing-8);
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.joker-game-menu-option {
+  display: inline-flex;
+  width: 100%;
+  height: 40px;
+  box-sizing: border-box;
+  align-items: center;
+  gap: var(--spacing-8);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--joker-black-50);
+  padding: 0 var(--spacing-12);
+  font-size: var(--body-14);
+  font-weight: 400;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-base) var(--ease-standard),
+    border-color var(--motion-base) var(--ease-standard),
+    color var(--motion-base) var(--ease-standard);
+}
+
+.joker-game-menu-option:hover {
+  border-color: var(--joker-black-300);
+  background: var(--joker-black-700);
+  color: var(--joker-white-50);
+}
+
+.joker-game-menu-option.is-selected {
+  border-color: var(--joker-gold-800);
+  background: color-mix(in srgb, var(--joker-gold-1000) 58%, var(--joker-black-800));
+  color: var(--joker-gold-100);
+}
+
+.joker-game-menu-trigger-icon,
+.joker-game-menu-option-icon {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: currentColor;
+  transition:
+    color var(--motion-base) var(--ease-standard),
+    transform var(--motion-base) var(--ease-standard);
+}
+
+.joker-game-menu-trigger-icon svg,
+.joker-game-menu-trigger-icon img,
+.joker-game-menu-option-icon svg,
+.joker-game-menu-option-icon img {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.joker-game-menu-trigger-icon svg,
+.joker-game-menu-trigger-icon svg path,
+.joker-game-menu-trigger-icon svg circle,
+.joker-game-menu-option-icon svg,
+.joker-game-menu-option-icon svg path,
+.joker-game-menu-option-icon svg circle {
+  fill: currentColor;
+}
+
+.joker-game-menu-option.is-selected .joker-game-menu-option-icon {
+  transform: scale(1.04);
+}
+
+.joker-game-menu-trigger-icon.nav-custom-icon,
+.joker-game-menu-option-icon .nav-custom-icon,
+.joker-product-rail-game-icon .nav-custom-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.joker-top-rail-demo {
+  display: grid;
+  width: min(100%, 672px);
+  height: 74px;
+  box-sizing: border-box;
+  grid-template-columns: 179px minmax(0, 1fr) 179px;
+  align-items: center;
+  border-bottom: 1px solid var(--joker-black-300);
+  background: var(--joker-black-800);
+  padding: 0 var(--spacing-32);
+}
+
+.joker-top-rail-lane {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.joker-top-rail-lane--left {
+  justify-content: flex-start;
+}
+
+.joker-top-rail-lane--center {
+  justify-content: center;
+}
+
+.joker-top-rail-lane--right {
+  justify-content: flex-end;
+}
+
+.joker-mobile-nav {
+  width: 100%;
+  overflow: visible;
+  color: var(--joker-white-50);
+}
+
+.joker-mobile-nav-bar {
+  display: flex;
+  width: 100%;
+  height: 60px;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--joker-black-300);
+  background: var(--joker-black-800);
+  padding: 0 20px;
+}
+
+.joker-mobile-nav .joker-logo-component {
+  width: auto;
+  height: 40px;
+}
+
+.joker-mobile-nav .joker-logo-component img {
+  width: 118px;
+}
+
+.joker-mobile-nav-toggle {
+  position: relative;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid var(--joker-black-300);
+  border-radius: var(--radius-sm);
+  background: var(--joker-black-700);
+  color: var(--joker-white-50);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-base) var(--ease-standard),
+    border-color var(--motion-base) var(--ease-standard),
+    color var(--motion-base) var(--ease-standard);
+}
+
+.joker-mobile-nav-toggle:hover {
+  border-color: var(--joker-black-200);
+  background: var(--joker-black-600);
+}
+
+.joker-mobile-nav-toggle svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.25;
+}
+
+.joker-mobile-nav-toggle-icon {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  transition:
+    opacity var(--motion-fast) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
+}
+
+.joker-mobile-nav-toggle-icon--close,
+.joker-mobile-nav.is-open .joker-mobile-nav-toggle-icon--menu {
+  opacity: 0;
+  transform: scale(0.86) rotate(-16deg);
+}
+
+.joker-mobile-nav.is-open .joker-mobile-nav-toggle-icon--close {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.joker-mobile-nav-panel {
+  max-height: 0;
+  overflow: hidden;
+  border-bottom: 1px solid transparent;
+  background: var(--joker-black-800);
+  opacity: 0;
+  transform: translateY(-6px);
+  transform-origin: top center;
+  transition:
+    max-height var(--motion-medium) var(--ease-out),
+    opacity var(--motion-medium) var(--ease-out),
+    border-color var(--motion-medium) var(--ease-out),
+    transform var(--motion-medium) var(--ease-out);
+}
+
+.joker-mobile-nav.is-open .joker-mobile-nav-panel {
+  max-height: min(680px, calc(100dvh - 60px));
+  border-color: var(--joker-black-300);
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.joker-mobile-nav-panel-inner {
+  display: grid;
+  height: min(680px, calc(100dvh - 60px));
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.joker-mobile-nav-section {
+  display: grid;
+  gap: var(--spacing-8);
+  border-top: 1px solid var(--joker-black-300);
+  padding: var(--spacing-16) 20px;
+}
+
+.joker-mobile-nav-section:first-child {
+  border-top: 0;
+}
+
+.joker-mobile-nav-actions {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.joker-mobile-nav-actions .joker-wallet-control {
+  min-width: 0;
+}
+
+.joker-mobile-nav-actions .joker-action-group-set {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.joker-mobile-avatar-item {
+  flex: 0 0 auto;
+}
+
+.joker-mobile-nav-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.joker-mobile-nav-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.joker-mobile-nav-scroll .joker-mobile-nav-section:first-child {
+  border-top: 1px solid var(--joker-black-300);
+}
+
+.joker-mobile-nav-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background:
+    linear-gradient(180deg, rgb(19 19 19 / 0.86), var(--joker-black-800) 34%),
+    var(--joker-black-800);
+}
+
+.joker-mobile-nav .joker-rail-search-item,
+.joker-mobile-nav .joker-game-menu,
+.joker-mobile-nav .joker-wallet-control {
+  width: 100%;
+}
+
+.joker-mobile-nav .joker-wallet-balance {
+  flex: 1;
+}
+
+.joker-mobile-nav .joker-mobile-avatar-item {
+  width: 40px;
+  height: 40px;
+}
+
+.joker-mobile-nav .joker-product-rail-item,
+.joker-mobile-nav .joker-product-rail-menu-trigger,
+.joker-mobile-nav .joker-product-rail-game-option {
+  height: 40px;
+}
+
+.joker-mobile-nav .joker-product-rail-game-list {
+  background: var(--joker-black-700);
+}
+
+@media (max-width: 680px) {
+  .joker-top-rail-demo {
+    grid-template-columns: minmax(96px, 1fr) auto minmax(96px, 1fr);
+  }
+
+  .joker-top-rail-demo .joker-logo-component {
+    width: 96px;
+  }
+
+  .joker-top-rail-demo .joker-logo-component img {
+    width: 92px;
+  }
+}
+
+@media (min-width: 761px) {
+  .joker-mobile-game-shell {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .joker-game-shell {
+    display: none;
+  }
+
+  .joker-mobile-game-content .joker-game-shell-stage {
+    min-height: 524px;
+    border-bottom: 1px solid var(--joker-black-300);
+  }
+}
