@@ -1,11 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { BetAmountInput, GameShell, Input, Select } from "@joker/design-system";
 
 const jokerCoin = new URL("../assets/jokerCoin.svg", import.meta.url).href;
 const jokerIcon = new URL("../assets/iconJoker.svg", import.meta.url).href;
+const jokerDimmedLogo = new URL("../assets/jokerDimmed.svg", import.meta.url).href;
+const settingsIcon = new URL("../assets/settings-icon.svg", import.meta.url).href;
+const starIcon = new URL("../assets/star_icon.svg", import.meta.url).href;
+const graphIcon = new URL("../assets/graph-icon.svg", import.meta.url).href;
+const infoIcon = new URL("../assets/info.svg", import.meta.url).href;
 const goldIcon = new URL("../assets/gold.png", import.meta.url).href;
 const dynamiteIcon = new URL("../assets/dynamite.png", import.meta.url).href;
+const shieldIcon = new URL("../assets/sheild.png", import.meta.url).href;
 const gridTileCount = 24;
 const minTileAmount = 1;
 const maxTileAmount = gridTileCount;
@@ -17,7 +23,6 @@ const gameOptions = [
   }),
 ];
 const mineTiles = Array.from({ length: 25 }, (_, index) => index + 1);
-const tileStatePreview = ["default", "gold", "dynamite"];
 const tileStateAssets = {
   default: { label: "Joker", src: jokerIcon },
   joker: { label: "Joker", src: jokerIcon },
@@ -60,14 +65,44 @@ function createRoundBoard(minesCount) {
   }
 
   const dynamiteIndexes = new Set(shuffledIndexes.slice(0, minesCount));
-  const jokerIndex = shuffledIndexes.find((index) => !dynamiteIndexes.has(index));
+  const earlyShieldIndexes = tileIndexes.slice(0, 4);
+  const availableEarlyShieldIndexes = earlyShieldIndexes.filter(
+    (index) => !dynamiteIndexes.has(index)
+  );
+  const jokerIndexPool =
+    availableEarlyShieldIndexes.length > 0
+      ? availableEarlyShieldIndexes
+      : shuffledIndexes.filter((index) => !dynamiteIndexes.has(index));
+  const jokerIndex =
+    jokerIndexPool[Math.floor(Math.random() * jokerIndexPool.length)];
 
   return tileIndexes.map((index) => {
-    if (dynamiteIndexes.has(index)) return "dynamite";
-    if (index === jokerIndex) return "joker";
+    let content = "gold";
 
-    return "gold";
+    if (dynamiteIndexes.has(index)) content = "dynamite";
+    if (index === jokerIndex) content = "joker";
+
+    return {
+      blockedByShield: false,
+      content,
+      id: index + 1,
+    };
   });
+}
+
+function getTileContent(tile) {
+  return tile?.content || "gold";
+}
+
+function countSafeReveals(board, revealedTiles) {
+  return revealedTiles.filter((tile) => getTileContent(board[tile - 1]) !== "dynamite")
+    .length;
+}
+
+function blockTileWithShield(board, tileId) {
+  return board.map((tile) =>
+    tile.id === tileId ? { ...tile, blockedByShield: true } : tile
+  );
 }
 
 function formatCurrency(value) {
@@ -96,14 +131,23 @@ export function App() {
   const [revealedTiles, setRevealedTiles] = useState([]);
   const [freshRevealedTiles, setFreshRevealedTiles] = useState([]);
   const [roundStatus, setRoundStatus] = useState("idle");
+  const [shieldActive, setShieldActive] = useState(false);
+  const [shieldUsed, setShieldUsed] = useState(false);
+  const [cashoutResult, setCashoutResult] = useState(null);
+  const [playArea, setPlayArea] = useState(null);
+  const cashoutResetTimeout = useRef(null);
 
   const activeMineCount = clampTileAmount(mines);
-  const revealedCount = revealedTiles.length;
+  const safeRevealedCount = countSafeReveals(board, revealedTiles);
   const gameInPlay = roundStatus === "active";
-  const multiplier = calculateMultiplier(activeMineCount, revealedCount);
-  const nextMultiplier = calculateMultiplier(activeMineCount, revealedCount + 1);
+  const multiplier = calculateMultiplier(activeMineCount, safeRevealedCount);
+  const nextMultiplier = calculateMultiplier(activeMineCount, safeRevealedCount + 1);
   const numericBetAmount = Number(betAmount) || 0;
-  const currentProfit = revealedCount > 0 ? numericBetAmount * multiplier : 0;
+  const hasBetAmount = numericBetAmount > 0;
+  const currentProfit =
+    roundStatus === "active" && safeRevealedCount > 0
+      ? numericBetAmount * multiplier
+      : 0;
   const nextProfit = numericBetAmount * nextMultiplier;
 
   useEffect(() => {
@@ -140,12 +184,31 @@ export function App() {
     return () => window.cancelAnimationFrame(frameId);
   }, []);
 
+  useEffect(() => {
+    const updatePlayArea = () => {
+      setPlayArea(document.querySelector(".joker-game-shell-play-area"));
+    };
+
+    updatePlayArea();
+    const frameId = window.requestAnimationFrame(updatePlayArea);
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (cashoutResetTimeout.current) {
+        window.clearTimeout(cashoutResetTimeout.current);
+      }
+    };
+  }, []);
+
   function handleTileClick(tile) {
     if (roundStatus !== "active" || revealedTiles.includes(tile)) {
       return;
     }
 
-    const tileContent = board[tile - 1];
+    const tileContent = getTileContent(board[tile - 1]);
 
     setRevealedTiles((currentTiles) =>
       currentTiles.includes(tile) ? currentTiles : [...currentTiles, tile]
@@ -154,8 +217,21 @@ export function App() {
       currentTiles.includes(tile) ? currentTiles : [...currentTiles, tile]
     );
 
-    if (tileContent === "dynamite") {
+    if (tileContent === "joker") {
+      setShieldActive(true);
+      setMessage("Joker Shield Activated");
+    }
+
+    if (tileContent === "dynamite" && shieldActive) {
+      setBoard((currentBoard) => blockTileWithShield(currentBoard, tile));
+      setShieldActive(false);
+      setShieldUsed(true);
+      setMessage("Shield Saved You");
+    }
+
+    if (tileContent === "dynamite" && !shieldActive) {
       setRoundStatus("lost");
+      setShieldActive(false);
       setMessage("");
     }
 
@@ -169,11 +245,28 @@ export function App() {
   function handleBetAction() {
     if (gameInPlay) {
       setBalance((currentBalance) => currentBalance + currentProfit);
-      setRoundStatus("idle");
-      setBoard([]);
-      setRevealedTiles([]);
+      setCashoutResult({
+        multiplier,
+        profit: currentProfit,
+      });
+      setRoundStatus("cashedOut");
       setFreshRevealedTiles([]);
+      setShieldActive(false);
+      setShieldUsed(false);
       setMessage("");
+
+      if (cashoutResetTimeout.current) {
+        window.clearTimeout(cashoutResetTimeout.current);
+      }
+
+      cashoutResetTimeout.current = window.setTimeout(() => {
+        setRoundStatus("idle");
+        setBoard([]);
+        setRevealedTiles([]);
+        setFreshRevealedTiles([]);
+        setCashoutResult(null);
+        cashoutResetTimeout.current = null;
+      }, 1800);
       return;
     }
 
@@ -184,11 +277,19 @@ export function App() {
 
     const nextBoard = createRoundBoard(activeMineCount);
 
+    if (cashoutResetTimeout.current) {
+      window.clearTimeout(cashoutResetTimeout.current);
+      cashoutResetTimeout.current = null;
+    }
+
     setBalance((currentBalance) => currentBalance - numericBetAmount);
     setBoard(nextBoard);
     setRoundStatus("active");
     setRevealedTiles([]);
     setFreshRevealedTiles([]);
+    setShieldActive(false);
+    setShieldUsed(false);
+    setCashoutResult(null);
     setMessage("");
   }
 
@@ -201,11 +302,37 @@ export function App() {
             width: 100%;
             height: 100%;
             min-height: 0;
-            place-items: center;
             overflow: hidden;
             background:
               radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--joker-gold-400) 4%, transparent), transparent 34%),
               var(--joker-black-700);
+          }
+
+          .joker-game-shell .joker-game-header-info {
+            display: inline-grid;
+            place-items: center;
+            background: url("${infoIcon}") center / contain no-repeat;
+          }
+
+          .joker-game-shell .joker-game-header-info svg {
+            opacity: 0;
+          }
+
+          .joker-game-shell .joker-game-shell-play-area {
+            grid-template-rows: minmax(0, 1fr) auto;
+          }
+
+          .joker-game-shell .joker-game-shell-betting,
+          .joker-game-shell .joker-game-shell-empty-stage {
+            min-height: 0;
+          }
+
+          .joker-mines-board-area {
+            position: relative;
+            display: grid;
+            height: 100%;
+            min-height: 0;
+            place-items: center;
             padding: clamp(var(--spacing-24), 5vmin, var(--spacing-64));
           }
 
@@ -216,6 +343,67 @@ export function App() {
             grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: var(--spacing-12);
             overflow: visible;
+          }
+
+          .joker-mines-frame-footer {
+            display: grid;
+            grid-column: 1 / -1;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            align-items: center;
+            min-height: calc(var(--spacing-64) - var(--spacing-8));
+            border-top: var(--border-width-default) solid var(--joker-black-300);
+            background: var(--joker-black-500);
+            padding: 0 var(--spacing-24);
+          }
+
+          .joker-mines-footer-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-8);
+            min-width: 0;
+          }
+
+          .joker-mines-footer-button {
+            display: inline-grid;
+            width: var(--spacing-32);
+            height: var(--spacing-32);
+            place-items: center;
+            border: 0;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            color: color-mix(in srgb, var(--joker-white-50) 68%, var(--joker-black-50));
+            cursor: pointer;
+            padding: 0;
+            transition:
+              color var(--motion-fast) var(--ease-standard),
+              transform var(--motion-fast) var(--ease-standard);
+          }
+
+          .joker-mines-footer-button:hover {
+            color: var(--joker-white-50);
+            transform: translateY(calc(var(--border-width-default) * -1));
+          }
+
+          .joker-mines-footer-icon {
+            display: block;
+            width: var(--spacing-20, calc(var(--spacing-16) + var(--spacing-4)));
+            height: var(--spacing-20, calc(var(--spacing-16) + var(--spacing-4)));
+            object-fit: contain;
+            pointer-events: none;
+          }
+
+          .joker-mines-footer-logo {
+            display: block;
+            width: clamp(calc(var(--spacing-64) + var(--spacing-8)), 7vw, calc(var(--spacing-64) + var(--spacing-40)));
+            max-height: var(--spacing-24);
+            opacity: 0.38;
+            filter: grayscale(1);
+            pointer-events: none;
+            user-select: none;
+          }
+
+          .joker-mines-footer-spacer {
+            min-width: 0;
           }
 
           .joker-mines-tile {
@@ -230,10 +418,14 @@ export function App() {
             border-radius: calc(var(--radius-sm) + var(--radius-sm));
             background: transparent;
             box-shadow: none;
-            cursor: pointer;
+            cursor: default;
             padding: 0;
             transition:
               transform var(--motion-fast) var(--ease-standard);
+          }
+
+          .joker-mines-grid.is-bet-ready .joker-mines-tile:not(.joker-mines-tile--revealed) {
+            cursor: pointer;
           }
 
           .joker-mines-tile-surface {
@@ -286,6 +478,11 @@ export function App() {
             opacity: 1;
           }
 
+          .joker-mines-tile-icon--joker {
+            width: clamp(calc(var(--spacing-40) + var(--spacing-8)), 44%, calc(var(--spacing-64) + var(--spacing-16)));
+            opacity: 1;
+          }
+
           .joker-mines-tile-icon--dynamite {
             width: clamp(var(--spacing-64), 76%, calc(var(--spacing-64) + var(--spacing-64)));
             opacity: 1;
@@ -312,17 +509,17 @@ export function App() {
               drop-shadow(0 var(--spacing-4) var(--spacing-8) rgb(0 0 0 / 0.4));
           }
 
-          .joker-mines-tile:hover {
+          .joker-mines-grid.is-bet-ready .joker-mines-tile:not(.joker-mines-tile--revealed):hover {
             transform: translateY(calc(var(--border-width-default) * -1));
           }
 
-          .joker-mines-tile:hover .joker-mines-tile-surface {
+          .joker-mines-grid.is-bet-ready .joker-mines-tile:not(.joker-mines-tile--revealed):hover .joker-mines-tile-surface {
             border-color: color-mix(in srgb, var(--joker-gold-400) 38%, var(--joker-black-300));
             background: color-mix(in srgb, var(--joker-black-700) 88%, var(--joker-gold-1000));
             box-shadow: none;
           }
 
-          .joker-mines-tile--dynamite:hover .joker-mines-tile-surface,
+          .joker-mines-grid.is-bet-ready .joker-mines-tile--dynamite:not(.joker-mines-tile--revealed):hover .joker-mines-tile-surface,
           .joker-mines-tile--dynamite.joker-mines-tile--fresh-reveal .joker-mines-tile-surface {
             border-color: rgb(255 70 70 / 0.75);
             background:
@@ -356,6 +553,16 @@ export function App() {
             border-color: var(--joker-gold-400);
             filter: drop-shadow(0 0 var(--spacing-16) color-mix(in srgb, var(--joker-gold-400) 34%, transparent));
             transition: none;
+          }
+
+          .joker-mines-tile--joker.joker-mines-tile--revealed .joker-mines-tile-surface,
+          .joker-mines-tile--joker.joker-mines-tile--revealed:hover .joker-mines-tile-surface {
+            border-color: color-mix(in srgb, var(--joker-gold-400) 76%, var(--joker-black-300));
+            background: var(--joker-black-700);
+            box-shadow:
+              0 0 0 var(--border-width-default) color-mix(in srgb, var(--joker-gold-400) 14%, transparent),
+              inset 0 0 var(--spacing-24) color-mix(in srgb, var(--joker-gold-400) 8%, transparent);
+            filter: drop-shadow(0 0 var(--spacing-12) color-mix(in srgb, var(--joker-gold-400) 24%, transparent));
           }
 
           .joker-mines-tile--fresh-reveal {
@@ -394,6 +601,56 @@ export function App() {
             animation: joker-mines-dynamite-reveal 250ms var(--ease-standard) both;
           }
 
+          .joker-mines-tile--shield-blocked {
+            z-index: 18;
+          }
+
+          .joker-mines-tile--shield-blocked .joker-mines-tile-surface {
+            box-shadow:
+              0 0 0 var(--border-width-default) rgb(255 70 70 / 0.2),
+              0 0 var(--spacing-24) rgb(255 70 70 / 0.25),
+              0 0 var(--spacing-32) color-mix(in srgb, var(--joker-gold-400) 18%, transparent),
+              inset 0 0 calc(var(--spacing-16) + var(--spacing-4)) rgb(255 70 70 / 0.08);
+          }
+
+          .joker-mines-shield-badge {
+            position: absolute;
+            right: var(--spacing-8);
+            bottom: var(--spacing-8);
+            z-index: 6;
+            display: grid;
+            width: clamp(var(--spacing-32), 26%, calc(var(--spacing-40) + var(--spacing-8)));
+            aspect-ratio: 1;
+            place-items: center;
+            border: var(--border-width-default) solid color-mix(in srgb, var(--joker-gold-400) 72%, var(--joker-black-200));
+            border-radius: var(--radius-pill);
+            background: color-mix(in srgb, var(--joker-black-900) 72%, var(--joker-gold-1000));
+            box-shadow:
+              0 0 var(--spacing-16) color-mix(in srgb, var(--joker-gold-400) 34%, transparent),
+              inset 0 0 var(--spacing-12) color-mix(in srgb, var(--joker-gold-400) 18%, transparent);
+            pointer-events: none;
+          }
+
+          .joker-mines-shield-badge img {
+            display: block;
+            width: 132%;
+            height: 132%;
+            object-fit: contain;
+            filter: drop-shadow(0 var(--spacing-4) var(--spacing-8) rgb(0 0 0 / 0.36));
+          }
+
+          .joker-mines-tile--shield-blocked.joker-mines-tile--fresh-reveal .joker-mines-shield-badge {
+            right: 50%;
+            bottom: 50%;
+            width: clamp(var(--spacing-64), 58%, calc(var(--spacing-64) + var(--spacing-48)));
+            border-color: transparent;
+            background: transparent;
+            box-shadow: none;
+            opacity: 0;
+            transform: translate(50%, 50%) scale(0.72);
+            animation: joker-mines-shield-block 980ms var(--ease-standard) both;
+          }
+
           .joker-mines-grid.is-round-lost .joker-mines-tile:not(.joker-mines-tile--revealed) {
             opacity: 0.34;
             filter: saturate(0.48);
@@ -401,12 +658,66 @@ export function App() {
             transform: none;
           }
 
+          .joker-mines-grid.is-cashed-out {
+            opacity: 0.42;
+            filter: saturate(0.72);
+            pointer-events: none;
+          }
+
           .joker-mines-grid.is-round-lost .joker-mines-tile:not(.joker-mines-tile--revealed) .joker-mines-tile-surface {
             border-color: var(--joker-black-300);
             filter: none;
           }
 
-          .joker-mines-tile--gold.joker-mines-tile--fresh-reveal .joker-mines-tile-surface::after {
+          .joker-mines-cashout-card {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            z-index: 40;
+            display: grid;
+            width: min(500px, calc(100% - var(--spacing-48)));
+            gap: var(--spacing-16);
+            border: calc(var(--border-width-default) + var(--border-width-default)) solid var(--joker-gold-400);
+            border-radius: calc(var(--radius-sm) + var(--radius-sm) + var(--spacing-4));
+            background:
+              radial-gradient(circle at center, color-mix(in srgb, var(--joker-gold-400) 14%, transparent), transparent 68%),
+              color-mix(in srgb, var(--joker-black-700) 78%, var(--joker-gold-1000));
+            box-shadow:
+              0 0 0 var(--border-width-default) color-mix(in srgb, var(--joker-gold-400) 24%, transparent),
+              0 0 var(--spacing-40) color-mix(in srgb, var(--joker-gold-400) 24%, transparent),
+              inset 0 0 var(--spacing-24) color-mix(in srgb, var(--joker-gold-400) 10%, transparent);
+            padding: var(--spacing-24);
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(0.96);
+            animation: joker-mines-cashout-pop 420ms var(--ease-standard) both;
+          }
+
+          .joker-mines-cashout-multiplier {
+            display: grid;
+            min-height: calc(var(--spacing-64) + var(--spacing-8));
+            place-items: center;
+            border: calc(var(--border-width-default) + var(--border-width-default)) solid color-mix(in srgb, var(--joker-gold-400) 68%, var(--joker-black-200));
+            border-radius: var(--radius-sm);
+            background: color-mix(in srgb, var(--joker-black-700) 72%, var(--joker-gold-1000));
+            color: var(--joker-white-50);
+            font-family: var(--font-display);
+            font-size: clamp(40px, 5vw, 64px);
+            font-weight: 500;
+            line-height: 1;
+            padding-top: var(--spacing-4);
+          }
+
+          .joker-mines-cashout-copy {
+            color: var(--joker-white-50);
+            font-family: var(--font-body);
+            font-size: clamp(18px, 2vw, 28px);
+            font-weight: 600;
+            line-height: 1.2;
+            text-align: center;
+          }
+
+          .joker-mines-tile--gold.joker-mines-tile--fresh-reveal .joker-mines-tile-surface::after,
+          .joker-mines-tile--joker.joker-mines-tile--fresh-reveal .joker-mines-tile-surface::after {
             content: "";
             position: absolute;
             inset: 18%;
@@ -429,6 +740,10 @@ export function App() {
 
           .joker-mines-tile--fresh-reveal .joker-mines-tile-icon--gold {
             animation: joker-mines-nugget-reveal 760ms var(--ease-standard) both;
+          }
+
+          .joker-mines-tile--fresh-reveal .joker-mines-tile-icon--joker {
+            animation: joker-mines-joker-reveal 760ms var(--ease-standard) both;
           }
 
           .joker-mines-particle {
@@ -566,6 +881,26 @@ export function App() {
             }
           }
 
+          @keyframes joker-mines-cashout-pop {
+            0% {
+              opacity: 0;
+              transform: translate(-50%, -50%) scale(0.92);
+              filter: drop-shadow(0 0 0 transparent);
+            }
+
+            64% {
+              opacity: 1;
+              transform: translate(-50%, -50%) scale(1.02);
+              filter: drop-shadow(0 0 var(--spacing-24) color-mix(in srgb, var(--joker-green-400) 34%, transparent));
+            }
+
+            100% {
+              opacity: 1;
+              transform: translate(-50%, -50%) scale(1);
+              filter: drop-shadow(0 0 var(--spacing-16) color-mix(in srgb, var(--joker-green-400) 24%, transparent));
+            }
+          }
+
           @keyframes joker-mines-gold-flash {
             0% {
               opacity: 0;
@@ -609,6 +944,58 @@ export function App() {
               opacity: 1;
               transform: scale(1) translateY(0);
               filter: drop-shadow(0 var(--spacing-4) var(--spacing-8) rgb(0 0 0 / 0.34));
+            }
+          }
+
+          @keyframes joker-mines-joker-reveal {
+            0% {
+              opacity: 0;
+              transform: scale(0.58) rotate(-4deg);
+              filter: drop-shadow(0 0 0 transparent);
+            }
+
+            44% {
+              opacity: 1;
+              transform: scale(1.12) rotate(2deg);
+              filter: drop-shadow(0 0 var(--spacing-16) color-mix(in srgb, var(--joker-gold-400) 44%, transparent));
+            }
+
+            72% {
+              opacity: 1;
+              transform: scale(0.96) rotate(0deg);
+              filter: drop-shadow(0 0 var(--spacing-12) color-mix(in srgb, var(--joker-gold-400) 30%, transparent));
+            }
+
+            100% {
+              opacity: 1;
+              transform: scale(1) rotate(0deg);
+              filter: drop-shadow(0 var(--spacing-4) var(--spacing-8) rgb(0 0 0 / 0.34));
+            }
+          }
+
+          @keyframes joker-mines-shield-block {
+            0% {
+              opacity: 0;
+              transform: translate(50%, 50%) scale(0.72);
+              filter: drop-shadow(0 0 0 transparent);
+            }
+
+            34% {
+              opacity: 1;
+              transform: translate(50%, 50%) scale(1.1);
+              filter: drop-shadow(0 0 var(--spacing-24) color-mix(in srgb, var(--joker-gold-400) 54%, transparent));
+            }
+
+            72% {
+              opacity: 0.92;
+              transform: translate(50%, 50%) scale(0.96);
+              filter: drop-shadow(0 0 var(--spacing-16) color-mix(in srgb, var(--joker-gold-400) 34%, transparent));
+            }
+
+            100% {
+              opacity: 1;
+              transform: translate(50%, 50%) scale(1);
+              filter: drop-shadow(0 var(--spacing-4) var(--spacing-12) rgb(0 0 0 / 0.42));
             }
           }
 
@@ -738,7 +1125,9 @@ export function App() {
       >
         <MinesGrid
           board={board}
+          cashoutResult={cashoutResult}
           freshRevealedTiles={freshRevealedTiles}
+          hasBetAmount={hasBetAmount}
           multiplier={multiplier}
           onTileClick={handleTileClick}
           revealedTiles={revealedTiles}
@@ -748,23 +1137,28 @@ export function App() {
       <BettingPanelFields
         betAmount={betAmount}
         bettingMode={bettingMode}
-        currentProfit={currentProfit}
-        gameInPlay={gameInPlay}
-        mines={mines}
-        multiplier={multiplier}
+          currentProfit={currentProfit}
+          gameInPlay={gameInPlay}
+          mines={mines}
+          multiplier={multiplier}
         nextMultiplier={nextMultiplier}
         nextProfit={nextProfit}
-        message={message}
-        onBetAmountChange={setBetAmount}
-        onMinesChange={setMines}
-      />
+          message={message}
+          roundStatus={roundStatus}
+          shieldActive={shieldActive}
+          onBetAmountChange={setBetAmount}
+          onMinesChange={setMines}
+        />
+      {playArea && createPortal(<GameShellFooter />, playArea)}
     </>
   );
 }
 
 function MinesGrid({
   board,
+  cashoutResult,
   freshRevealedTiles,
+  hasBetAmount,
   multiplier,
   onTileClick,
   revealedTiles,
@@ -772,59 +1166,100 @@ function MinesGrid({
 }) {
   return (
     <section className="joker-mines-stage" aria-label="Mines game board">
-      <div className={`joker-mines-grid ${roundStatus === "lost" ? "is-round-lost" : ""}`.trim()}>
-        {mineTiles.map((tile, index) => {
-          const revealed = revealedTiles.includes(tile);
-          const freshReveal = freshRevealedTiles.includes(tile);
-          const hiddenPreview = roundStatus === "idle" ? tileStatePreview[index] : null;
-          const state = revealed ? board[index] || "gold" : hiddenPreview || "default";
-          const asset = tileStateAssets[state];
+      <div className="joker-mines-board-area">
+        <div
+          className={`joker-mines-grid ${hasBetAmount ? "is-bet-ready" : ""} ${roundStatus === "lost" ? "is-round-lost" : ""} ${cashoutResult ? "is-cashed-out" : ""}`.trim()}
+        >
+          {mineTiles.map((tile, index) => {
+            const revealed = revealedTiles.includes(tile);
+            const freshReveal = freshRevealedTiles.includes(tile);
+            const tileData = board[index];
+            const tileContent = getTileContent(tileData);
+            const blockedByShield = Boolean(tileData?.blockedByShield);
+            const displayState = revealed ? tileContent : "default";
+            const asset = tileStateAssets[displayState];
 
-          return (
-            <button
-              key={tile}
-              className={`joker-mines-tile joker-mines-tile--${state} ${revealed ? "joker-mines-tile--revealed" : ""} ${freshReveal ? "joker-mines-tile--fresh-reveal" : ""}`.trim()}
-              type="button"
-              aria-label={`Tile ${tile}: ${asset.label}`}
-              aria-pressed={revealed}
-              data-selected={revealed || undefined}
-              onClick={() => onTileClick(tile)}
-            >
-              <span className="joker-mines-tile-surface">
-                <img
-                  className={`joker-mines-tile-icon joker-mines-tile-icon--${state}`}
-                  src={asset.src}
-                  alt=""
-                />
-                {freshReveal &&
-                  state === "gold" &&
-                  Array.from({ length: 6 }, (_, particleIndex) => (
-                    <span
-                      className="joker-mines-particle"
-                      key={particleIndex}
-                      aria-hidden="true"
-                    />
-                  ))}
-                {freshReveal &&
-                  state === "dynamite" &&
-                  Array.from({ length: 5 }, (_, smokeIndex) => (
-                    <span
-                      className="joker-mines-smoke"
-                      key={smokeIndex}
-                      aria-hidden="true"
-                    />
-                  ))}
-              </span>
-              {freshReveal && state === "gold" && (
-                <span className="joker-mines-tile-multiplier">
-                  {multiplier.toFixed(2)}x
+            return (
+              <button
+                key={tile}
+                className={`joker-mines-tile joker-mines-tile--${displayState} ${revealed ? "joker-mines-tile--revealed" : ""} ${freshReveal ? "joker-mines-tile--fresh-reveal" : ""} ${blockedByShield ? "joker-mines-tile--shield-blocked" : ""}`.trim()}
+                type="button"
+                aria-label={`Tile ${tile}: ${asset.label}`}
+                aria-pressed={revealed}
+                data-selected={revealed || undefined}
+                onClick={() => onTileClick(tile)}
+              >
+                <span className="joker-mines-tile-surface">
+                  <img
+                    className={`joker-mines-tile-icon joker-mines-tile-icon--${displayState}`}
+                    src={asset.src}
+                    alt=""
+                  />
+                  {freshReveal &&
+                    (displayState === "gold" || displayState === "joker") &&
+                    Array.from({ length: 6 }, (_, particleIndex) => (
+                      <span
+                        className="joker-mines-particle"
+                        key={particleIndex}
+                        aria-hidden="true"
+                      />
+                    ))}
+                  {freshReveal &&
+                    displayState === "dynamite" &&
+                    Array.from({ length: 5 }, (_, smokeIndex) => (
+                      <span
+                        className="joker-mines-smoke"
+                        key={smokeIndex}
+                        aria-hidden="true"
+                      />
+                    ))}
+                  {blockedByShield && (
+                    <span className="joker-mines-shield-badge" aria-hidden="true">
+                      <img src={shieldIcon} alt="" />
+                    </span>
+                  )}
                 </span>
-              )}
-            </button>
-          );
-        })}
+                {freshReveal && displayState === "gold" && (
+                  <span className="joker-mines-tile-multiplier">
+                    {multiplier.toFixed(2)}x
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        {cashoutResult && (
+          <div className="joker-mines-cashout-card" role="status" aria-live="polite">
+            <span className="joker-mines-cashout-multiplier">
+              {cashoutResult.multiplier.toFixed(2)}x
+            </span>
+            <span className="joker-mines-cashout-copy">
+              Cashout {formatCurrency(cashoutResult.profit)}
+            </span>
+          </div>
+        )}
       </div>
     </section>
+  );
+}
+
+function GameShellFooter() {
+  return (
+    <footer className="joker-mines-frame-footer" aria-label="Game tools">
+      <div className="joker-mines-footer-actions">
+        <button className="joker-mines-footer-button" type="button" aria-label="Settings">
+          <img className="joker-mines-footer-icon" src={settingsIcon} alt="" aria-hidden="true" />
+        </button>
+        <button className="joker-mines-footer-button" type="button" aria-label="Favourite">
+          <img className="joker-mines-footer-icon" src={starIcon} alt="" aria-hidden="true" />
+        </button>
+        <button className="joker-mines-footer-button" type="button" aria-label="Statistics">
+          <img className="joker-mines-footer-icon" src={graphIcon} alt="" aria-hidden="true" />
+        </button>
+      </div>
+      <img className="joker-mines-footer-logo" src={jokerDimmedLogo} alt="" aria-hidden="true" />
+      <span className="joker-mines-footer-spacer" aria-hidden="true" />
+    </footer>
   );
 }
 
@@ -840,15 +1275,38 @@ function BettingPanelFields({
   nextProfit,
   onBetAmountChange,
   onMinesChange,
+  roundStatus,
+  shieldActive,
 }) {
   const [fields, setFields] = useState(null);
   const [numberOfBets, setNumberOfBets] = useState("");
+  const [bonusSlot, setBonusSlot] = useState(null);
+  const [profitSlot, setProfitSlot] = useState(null);
 
   useEffect(() => {
     const bettingFields = document.querySelector(".joker-betting-fields");
     const bettingPanel = document.querySelector(".joker-betting-panel");
+    const submitButton = bettingPanel?.querySelector(".joker-bet-submit");
     const builtInBetAmountField = bettingFields?.children[0];
     const cashoutField = bettingFields?.children[1];
+    const profitField = [...(bettingPanel?.children || [])].find((child) =>
+      child.textContent?.includes("Profit on Win")
+    );
+    const profitDivider = profitField?.previousElementSibling;
+    let activeBonusSlot = bettingPanel?.querySelector(".joker-active-bonus-slot");
+    let activeProfitSlot = bettingPanel?.querySelector(".joker-active-profit-slot");
+
+    if (bettingPanel && submitButton && !activeBonusSlot) {
+      activeBonusSlot = document.createElement("div");
+      activeBonusSlot.className = "joker-active-bonus-slot";
+      bettingPanel.insertBefore(activeBonusSlot, submitButton);
+    }
+
+    if (bettingPanel && submitButton && !activeProfitSlot) {
+      activeProfitSlot = document.createElement("div");
+      activeProfitSlot.className = "joker-active-profit-slot";
+      bettingPanel.insertBefore(activeProfitSlot, submitButton);
+    }
 
     if (builtInBetAmountField instanceof HTMLElement) {
       builtInBetAmountField.style.display = "none";
@@ -858,12 +1316,23 @@ function BettingPanelFields({
       cashoutField.style.display = "none";
     }
 
+    if (profitDivider instanceof HTMLElement) {
+      profitDivider.style.display = "none";
+    }
+
+    if (profitField instanceof HTMLElement) {
+      profitField.style.display = "none";
+    }
+
     if (bettingPanel instanceof HTMLElement) {
       bettingPanel.classList.toggle("is-game-active", gameInPlay);
+      bettingPanel.classList.toggle("is-round-lost", roundStatus === "lost");
     }
 
     setFields(bettingFields);
-  }, [gameInPlay]);
+    setBonusSlot(activeBonusSlot);
+    setProfitSlot(activeProfitSlot);
+  }, [gameInPlay, roundStatus]);
 
   if (!fields) return null;
 
@@ -883,10 +1352,12 @@ function BettingPanelFields({
     setNumberOfBets(event.target.value.replace(/\D/g, ""));
   }
 
-  return createPortal(
+  return (
     <>
-      <style>
-        {`
+      {createPortal(
+        <>
+          <style>
+            {`
           .joker-gold-nuggets-field.joker-input-field.disabled {
             opacity: 1;
             pointer-events: none;
@@ -915,13 +1386,51 @@ function BettingPanelFields({
           }
 
           .joker-game-shell .joker-betting-panel {
+            align-content: start;
             height: 100%;
+            justify-content: stretch;
             min-height: 0;
-            grid-template-rows: auto auto auto auto minmax(0, 1fr) auto auto;
+            grid-template-rows: auto auto auto auto auto auto auto;
+          }
+
+          .joker-game-shell .joker-betting-panel.is-game-active {
+            grid-template-rows: auto auto auto auto auto auto minmax(0, 1fr) auto auto;
+          }
+
+          .joker-game-shell .joker-betting-panel.is-round-lost {
+            grid-template-rows: auto auto auto auto minmax(0, 1fr);
+          }
+
+          .joker-game-shell .joker-active-bonus-slot,
+          .joker-game-shell .joker-active-profit-slot {
+            display: grid;
+            min-height: 0;
+          }
+
+          .joker-game-shell .joker-active-bonus-slot:not(:has(.joker-active-bonus-card)),
+          .joker-game-shell .joker-active-profit-slot:not(:has(.joker-active-profit-card)) {
+            display: none;
+          }
+
+          .joker-game-shell .joker-active-bonus-slot:has(.joker-active-bonus-card) {
+            margin-bottom: var(--spacing-12);
+          }
+
+          .joker-game-shell .joker-betting-panel.is-round-lost .joker-active-profit-slot,
+          .joker-game-shell .joker-betting-panel.is-round-lost .joker-active-bonus-slot,
+          .joker-game-shell .joker-betting-panel.is-round-lost .joker-betting-spacer {
+            display: none;
           }
 
           .joker-game-shell .joker-betting-spacer {
+            display: none;
+            align-items: center;
             min-height: 0;
+          }
+
+          .joker-game-shell .joker-betting-panel.is-game-active .joker-betting-spacer {
+            display: grid;
+            height: auto;
           }
 
           .joker-betting-panel.is-game-active .joker-bet-mode-switch,
@@ -932,7 +1441,7 @@ function BettingPanelFields({
             user-select: none;
           }
 
-          .joker-betting-panel.is-game-active .joker-betting-fields > :not(:has(.joker-active-profit-card)) {
+          .joker-betting-panel.is-game-active .joker-betting-fields {
             filter: blur(calc(var(--border-width-default) + var(--border-width-default)));
             opacity: 0.38;
             pointer-events: none;
@@ -951,10 +1460,80 @@ function BettingPanelFields({
           .joker-active-profit-card {
             display: grid;
             gap: var(--spacing-12);
+            width: 100%;
             border: var(--border-width-default) solid var(--joker-black-200);
             border-radius: calc(var(--radius-sm) + var(--radius-sm));
             background: color-mix(in srgb, var(--joker-black-700) 92%, var(--joker-gold-1000));
             overflow: hidden;
+          }
+
+          .joker-active-bonus-card {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            align-items: center;
+            gap: var(--spacing-12);
+            width: 100%;
+            border: var(--border-width-default) solid color-mix(in srgb, var(--joker-gold-400) 58%, var(--joker-black-300));
+            border-radius: calc(var(--radius-sm) + var(--radius-sm));
+            background:
+              radial-gradient(circle at 12% 50%, color-mix(in srgb, var(--joker-gold-400) 18%, transparent), transparent 42%),
+              var(--joker-black-700);
+            box-shadow:
+              0 0 0 var(--border-width-default) color-mix(in srgb, var(--joker-gold-400) 10%, transparent),
+              0 0 var(--spacing-24) color-mix(in srgb, var(--joker-gold-400) 10%, transparent);
+            padding: var(--spacing-16);
+          }
+
+          .joker-active-bonus-icon {
+            display: grid;
+            width: var(--spacing-40);
+            height: var(--spacing-40);
+            place-items: center;
+            border-radius: var(--radius-pill);
+            background: color-mix(in srgb, var(--joker-gold-1000) 52%, var(--joker-black-700));
+            box-shadow: inset 0 0 var(--spacing-16) color-mix(in srgb, var(--joker-gold-400) 16%, transparent);
+          }
+
+          .joker-active-bonus-icon img {
+            display: block;
+            width: calc(var(--spacing-32) + var(--spacing-4));
+            height: calc(var(--spacing-32) + var(--spacing-4));
+            object-fit: contain;
+          }
+
+          .joker-active-bonus-copy {
+            display: grid;
+            gap: var(--spacing-4);
+            min-width: 0;
+          }
+
+          .joker-active-bonus-title {
+            color: var(--joker-white-50);
+            font-family: var(--font-body);
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.2;
+          }
+
+          .joker-active-bonus-text {
+            color: var(--joker-black-50);
+            font-family: var(--font-body);
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.25;
+          }
+
+          .joker-active-bonus-status {
+            align-self: start;
+            border: var(--border-width-default) solid var(--joker-green-400);
+            border-radius: var(--radius-pill);
+            background: color-mix(in srgb, var(--joker-green-900) 68%, var(--joker-black-700));
+            color: var(--joker-green-400);
+            font-family: var(--font-display);
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1;
+            padding: calc(var(--spacing-4) + var(--border-width-default)) var(--spacing-8) var(--spacing-4);
           }
 
           .joker-active-profit-row {
@@ -1041,96 +1620,133 @@ function BettingPanelFields({
             background: var(--joker-black-300);
           }
         `}
-      </style>
-      <div style={{ display: "grid", order: 0 }}>
-        <BetAmountInput
-          label="Bet amount"
-          message={message}
-          placeholder="0"
-          prefix={<img src={jokerCoin} alt="" />}
-          value={betAmount}
-          onChange={handleBetAmountChange}
-          fullWidth
-        />
-      </div>
-      <div style={{ display: "grid", order: 1 }}>
-        <Select
-          label="Mines"
-          placeholder="1"
-          value={mines}
-          onChange={handleMinesChange}
-          options={gameOptions}
-          fullWidth
-        />
-      </div>
-      <div style={{ display: "grid", order: 2 }}>
-        <Input
-          label="Gold nuggets"
-          placeholder="0"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          value={goldNuggets}
-          disabled
-          className="joker-gold-nuggets-field"
-          fullWidth
-        />
-      </div>
-      {bettingMode === "auto" && (
-        <div style={{ display: "grid", order: 3 }}>
-          <Input
-            label="Number of bets"
-            placeholder="0"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            value={numberOfBets}
-            onChange={handleNumberOfBetsChange}
-            fullWidth
-          />
-        </div>
-      )}
-      {gameInPlay && (
-        <div style={{ display: "grid", order: 4 }}>
-          <div className="joker-active-profit-card">
-            <div className="joker-active-profit-row">
-              <div className="joker-active-profit-side">
-                <span className="joker-active-profit-label is-current">
-                  Current profit
-                </span>
-                <span className="joker-active-profit-value is-current">
-                  {formatCurrency(currentProfit)}
-                </span>
-              </div>
-              <span className="joker-active-profit-arrow" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="m9 5 7 7-7 7"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-              <div className="joker-active-profit-side">
-                <span className="joker-active-profit-label">Next</span>
-                <span className="joker-active-profit-value">
-                  {formatCurrency(nextProfit)}
-                </span>
-              </div>
-            </div>
-            <span className="joker-active-profit-divider" />
-            <div className="joker-active-profit-multipliers">
-              <span className="joker-active-profit-multiplier is-current">
-                {multiplier.toFixed(2)}x
-              </span>
-              <span className="joker-active-profit-split" aria-hidden="true" />
-              <span className="joker-active-profit-multiplier">
-                {nextMultiplier.toFixed(2)}x
-              </span>
-            </div>
+          </style>
+          <div style={{ display: "grid", order: 0 }}>
+            <BetAmountInput
+              label="Bet amount"
+              message={message}
+              placeholder="0"
+              prefix={<img src={jokerCoin} alt="" />}
+              value={betAmount}
+              onChange={handleBetAmountChange}
+              fullWidth
+            />
           </div>
-        </div>
+          <div style={{ display: "grid", order: 1 }}>
+            <Select
+              label="Mines"
+              placeholder="1"
+              value={mines}
+              onChange={handleMinesChange}
+              options={gameOptions}
+              fullWidth
+            />
+          </div>
+          <div style={{ display: "grid", order: 2 }}>
+            <Input
+              label="Gold nuggets"
+              placeholder="0"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={goldNuggets}
+              disabled
+              className="joker-gold-nuggets-field"
+              fullWidth
+            />
+          </div>
+          {bettingMode === "auto" && (
+            <div style={{ display: "grid", order: 3 }}>
+              <Input
+                label="Number of bets"
+                placeholder="0"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={numberOfBets}
+                onChange={handleNumberOfBetsChange}
+                fullWidth
+              />
+            </div>
+          )}
+        </>,
+        fields
       )}
-    </>,
-    fields
+      {bonusSlot &&
+        shieldActive &&
+        createPortal(<ActiveBonusCard />, bonusSlot)}
+      {profitSlot &&
+        gameInPlay &&
+        createPortal(
+          <ActiveProfitCard
+            currentProfit={currentProfit}
+            multiplier={multiplier}
+            nextMultiplier={nextMultiplier}
+            nextProfit={nextProfit}
+          />,
+          profitSlot
+        )}
+    </>
+  );
+}
+
+function ActiveBonusCard() {
+  return (
+    <span className="joker-active-bonus-card">
+      <span className="joker-active-bonus-icon" aria-hidden="true">
+        <img src={shieldIcon} alt="" />
+      </span>
+      <span className="joker-active-bonus-copy">
+        <span className="joker-active-bonus-title">Joker Shield</span>
+        <span className="joker-active-bonus-text">Next dynamite is blocked</span>
+      </span>
+      <span className="joker-active-bonus-status">ACTIVE</span>
+    </span>
+  );
+}
+
+function ActiveProfitCard({
+  currentProfit,
+  multiplier,
+  nextMultiplier,
+  nextProfit,
+}) {
+  return (
+    <span className="joker-active-profit-card">
+      <span className="joker-active-profit-row">
+        <span className="joker-active-profit-side">
+          <span className="joker-active-profit-label is-current">
+            Current profit
+          </span>
+          <span className="joker-active-profit-value is-current">
+            {formatCurrency(currentProfit)}
+          </span>
+        </span>
+        <span className="joker-active-profit-arrow" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path
+              d="m9 5 7 7-7 7"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+        <span className="joker-active-profit-side">
+          <span className="joker-active-profit-label">Next</span>
+          <span className="joker-active-profit-value">
+            {formatCurrency(nextProfit)}
+          </span>
+        </span>
+      </span>
+      <span className="joker-active-profit-divider" />
+      <span className="joker-active-profit-multipliers">
+        <span className="joker-active-profit-multiplier is-current">
+          {multiplier.toFixed(2)}x
+        </span>
+        <span className="joker-active-profit-split" aria-hidden="true" />
+        <span className="joker-active-profit-multiplier">
+          {nextMultiplier.toFixed(2)}x
+        </span>
+      </span>
+    </span>
   );
 }
