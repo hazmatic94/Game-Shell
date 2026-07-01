@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@joker/design-system": "file:../Design System/joker-design-system-0.1.8.tgz",
+    "@joker/design-system": "file:../Design System/joker-design-system-0.1.12.tgz",
     "@vitejs/plugin-react": "^4.3.4",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
