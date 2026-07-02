@@ -19,7 +19,6 @@ const dynamiteIcon = new URL("../assets/dynamite.png", import.meta.url).href;
 const shieldIcon = new URL("../assets/sheild.png", import.meta.url).href;
 const downArrowIcon = new URL("../assets/hilo-down.svg", import.meta.url).href;
 const upArrowIcon = new URL("../assets/hilo-up.svg", import.meta.url).href;
-const skipIcon = new URL("../assets/skip.svg", import.meta.url).href;
 const clubsIcon = new URL("../assets/clubs-wrapper.svg", import.meta.url).href;
 const diamondsIcon = new URL("../assets/diamonds-wrapper.svg", import.meta.url).href;
 const heartsIcon = new URL("../assets/hearts-wrapper.svg", import.meta.url).href;
@@ -1825,33 +1824,54 @@ function HiloPage({ onGameChange }) {
             right: calc(var(--spacing-24) * -1);
             z-index: 4;
             display: inline-flex;
+            width: 72px;
             height: 42px;
             align-items: center;
             justify-content: center;
-            border: 3px solid var(--joker-black-900);
+            border: var(--border-width-default) solid var(--joker-gold-400);
             border-radius: 999px;
-            background: var(--joker-black-200);
+            background: var(--joker-gold-1000);
             color: var(--joker-white-50);
-            font-family: var(--font-body);
-            font-size: var(--text-body-14);
-            font-weight: var(--text-body-weight);
-            line-height: var(--text-body-line-height);
-            padding: 0 var(--spacing-16);
-            text-transform: none;
             box-shadow: 0 var(--spacing-8) var(--spacing-16) rgb(0 0 0 / 0.42);
             cursor: pointer;
             appearance: none;
+            transition:
+              background var(--motion-fast) var(--ease-standard),
+              border-color var(--motion-fast) var(--ease-standard),
+              transform var(--motion-fast) var(--ease-standard);
           }
 
           .joker-hilo-main-card-skip:hover {
-            background: var(--joker-black-300);
+            border-color: var(--joker-gold-300);
+            background: var(--joker-gold-900);
+            transform: translateY(calc(var(--spacing-2, 2px) * -1));
           }
 
-          .joker-hilo-main-card-skip-label {
+          .joker-hilo-main-card-skip-chevrons {
+            display: inline-flex;
+            align-items: center;
+          }
+
+          .joker-hilo-main-card-skip-chevron {
+            width: 18px;
+            height: 18px;
             color: var(--joker-white-50);
-            text-shadow: none;
-            -webkit-text-stroke: 0;
-            transform: none;
+          }
+
+          .joker-hilo-main-card-skip-chevron + .joker-hilo-main-card-skip-chevron {
+            margin-left: -10px;
+          }
+
+          .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
           }
 
           .joker-hilo-prediction-group {
@@ -1889,7 +1909,7 @@ function HiloPage({ onGameChange }) {
           }
 
           .joker-hilo-prediction-card:not(:disabled):hover {
-            border-color: var(--joker-black-50);
+            border-color: var(--joker-black-200);
             opacity: 1;
             transform: translateY(calc(var(--spacing-4) * -1));
           }
@@ -1978,7 +1998,11 @@ function HiloPage({ onGameChange }) {
             width: 100%;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: var(--spacing-12);
+            padding: var(--spacing-12);
             margin-top: 0;
+            border: var(--border-width-default) solid var(--joker-black-300);
+            border-radius: var(--radius-md, 8px);
+            background: var(--joker-black-700);
           }
 
           .joker-hilo-status {
@@ -2245,7 +2269,11 @@ function HiloMainCard({ card, onSkipCard, skipAvailable }) {
       </div>
       {skipAvailable && (
         <button className="joker-hilo-main-card-skip" onClick={onSkipCard} type="button">
-          <span className="joker-hilo-main-card-skip-label">Skip</span>
+          <span className="joker-hilo-main-card-skip-chevrons" aria-hidden="true">
+            <ChevronRightIcon className="joker-hilo-main-card-skip-chevron" />
+            <ChevronRightIcon className="joker-hilo-main-card-skip-chevron" />
+          </span>
+          <span className="sr-only">Skip card</span>
         </button>
       )}
     </div>
@@ -2312,6 +2340,21 @@ function HiloChoiceChevronIcon({ direction }) {
         stroke="currentColor"
         strokeLinecap="round"
         strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ChevronRightIcon({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path
+        d="m9 6 6 6-6 6"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="3"
       />
     </svg>
   );
